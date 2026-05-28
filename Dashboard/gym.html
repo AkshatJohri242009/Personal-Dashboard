@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Personal Dashboard - Gym</title>
+  <style>
+    :root {
+      --bg: #050506;
+      --panel: rgba(255,255,255,0.045);
+      --panel-strong: rgba(255,255,255,0.07);
+      --text: #fafafa;
+      --muted: #b8b6b0;
+      --dim: #76746e;
+      --success: #6be3a4;
+      --warning: #f2c063;
+      --danger: #ff6b6b;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: calc(22px + env(safe-area-inset-top)) 18px 92px;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 80% 8%, rgba(123,91,176,0.16), transparent 34%),
+        radial-gradient(circle at 18% 92%, rgba(242,192,99,0.08), transparent 34%),
+        var(--bg);
+    }
+
+    main { width: min(100%, 1100px); margin: 0 auto; }
+
+    .title {
+      margin: 0 0 4px;
+      font-size: 28px;
+      font-weight: 750;
+      line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #c7c4bc 120%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      grid-column: span 6;
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.42);
+      backdrop-filter: blur(22px) saturate(1.2);
+    }
+
+    .card-wide { grid-column: span 12; }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 16px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.65;
+    }
+
+    .split-row, .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    button, select, input {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+      font: 700 13px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      outline: none;
+    }
+
+    input { flex: 1 1 120px; min-width: 0; }
+    select { flex: 1 1 180px; }
+    button { cursor: pointer; }
+
+    .split-btn {
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .split-btn.is-active {
+      color: #07120d;
+      border-color: transparent;
+      background: var(--success);
+    }
+
+    .primary {
+      color: #07120d;
+      border-color: transparent;
+      background: linear-gradient(180deg, #fff, #e8e5dd);
+    }
+
+    .log-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .log-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .log-title { font-weight: 760; }
+
+    .log-meta {
+      margin-top: 3px;
+      color: var(--muted);
+      font: 12px var(--mono);
+    }
+
+    .rec {
+      grid-column: 1 / -1;
+      padding: 9px 10px;
+      border-radius: 10px;
+      color: #0f0b03;
+      background: var(--warning);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .delete {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      color: var(--dim);
+      border-radius: 10px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .chart-card {
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--panel-strong);
+    }
+
+    .chart-title {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font: 800 11px var(--mono);
+    }
+
+    canvas {
+      width: 100%;
+      height: 90px;
+      display: block;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .photo-slot {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      overflow: hidden;
+      border: 1px dashed rgba(255,255,255,0.16);
+      border-radius: 14px;
+      color: var(--dim);
+      background: rgba(255,255,255,0.035);
+      text-align: center;
+      font: 800 11px var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .photo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .photo-slot input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      z-index: 20;
+      display: flex;
+      gap: 6px;
+      width: min(calc(100% - 24px), 520px);
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 18px;
+      background: rgba(8,8,9,0.84);
+      box-shadow: 0 16px 44px rgba(0,0,0,0.48);
+      backdrop-filter: blur(22px) saturate(1.25);
+      transform: translateX(-50%);
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 13px;
+      color: var(--muted);
+      text-align: center;
+      text-decoration: none;
+      font: 800 11px/1 var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .bottom-nav a[aria-current="page"] {
+      color: #08100d;
+      background: var(--success);
+    }
+
+    @media (max-width: 760px) {
+      .card { grid-column: span 12; }
+      .chart-grid, .photo-grid { grid-template-columns: 1fr; }
+      .title { font-size: 23px; }
+      .bottom-nav a { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="title">Gym Tracker</h1>
+    <p class="subtitle">Log lifts, track split context, get simple progressive overload nudges, and compare progress photos.</p>
+
+    <div class="grid">
+      <section class="card card-wide">
+        <div class="section-label">Workout Log</div>
+        <div class="split-row" id="splitRow"></div>
+        <div class="form-row">
+          <select id="exercise">
+            <option>Bench Press</option>
+            <option>Squat</option>
+            <option>Deadlift</option>
+            <option>Overhead Press</option>
+            <option>Lat Pulldown</option>
+            <option>Row</option>
+          </select>
+          <input id="sets" type="number" min="1" max="10" value="3" aria-label="Sets">
+          <input id="weight" type="number" min="0" step="0.5" value="40" aria-label="Weight">
+          <input id="reps" type="text" value="8,8,8" aria-label="Reps">
+          <button class="primary" id="addLog" type="button">Add Set</button>
+        </div>
+        <div class="log-list" id="logList"></div>
+      </section>
+
+      <section class="card card-wide">
+        <div class="section-label">Strength Trends</div>
+        <div class="chart-grid" id="chartGrid"></div>
+      </section>
+
+      <section class="card card-wide">
+        <div class="section-label">Progress Photos</div>
+        <div class="photo-grid">
+          <label class="photo-slot" id="photoA">Before<input type="file" accept="image/*" data-photo="photoA"></label>
+          <label class="photo-slot" id="photoB">After<input type="file" accept="image/*" data-photo="photoB"></label>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Dashboard sections">
+    <a href="index.html">Main</a>
+    <a href="health.html">Health</a>
+    <a href="gym.html" aria-current="page">Gym</a>
+    <a href="weight102.html">Weight</a>
+  </nav>
+
+  <script>
+    const defaultState = { split: 'Push Day', logs: [], photos: {} };
+    const state = { ...defaultState, ...readState() };
+    const splits = ['Push Day', 'Pull Day', 'Leg Day', 'Gym Home', 'School Gym'];
+
+    function readState() {
+      try { return JSON.parse(localStorage.getItem('gym_dashboard_v1')) || {}; }
+      catch (_) { return {}; }
+    }
+
+    function saveState() {
+      localStorage.setItem('gym_dashboard_v1', JSON.stringify(state));
+      scheduleCloudPush();
+    }
+
+    const CLOUD_SYNC_ENDPOINT = '/.netlify/functions/store';
+    const SYNC_EXACT_KEYS = ['goal_streak_v1', 'health_dashboard_v1', 'gym_dashboard_v1'];
+    const SYNC_PREFIXES = ['goals:'];
+    let cloudPushTimer = null;
+    let lastCloudSnapshot = '';
+    let applyingRemote = false;
+
+    function isSyncedKey(key) {
+      return SYNC_EXACT_KEYS.includes(key) || SYNC_PREFIXES.some(prefix => prefix && key.startsWith(prefix));
+    }
+
+    function readJsonKey(key) {
+      try { return JSON.parse(localStorage.getItem(key)); }
+      catch (_) { return null; }
+    }
+
+    function getSyncedState() {
+      const synced = {};
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key && isSyncedKey(key)) synced[key] = readJsonKey(key);
+      }
+      return synced;
+    }
+
+    function stableStringify(value) {
+      const sorted = {};
+      Object.keys(value || {}).sort().forEach(key => { sorted[key] = value[key]; });
+      return JSON.stringify(sorted);
+    }
+
+    function scheduleCloudPush() {
+      if (applyingRemote) return;
+      window.clearTimeout(cloudPushTimer);
+      cloudPushTimer = window.setTimeout(pushCloudState, 300);
+    }
+
+    async function pushCloudState() {
+      const stateToPush = getSyncedState();
+      const snapshot = stableStringify(stateToPush);
+      if (snapshot === lastCloudSnapshot) return;
+      try {
+        const response = await fetch(CLOUD_SYNC_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stateToPush)
+        });
+        if (response.ok) lastCloudSnapshot = snapshot;
+      } catch (_) {}
+    }
+
+    async function pullCloudState() {
+      try {
+        const response = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
+        if (!response.ok) return;
+        const remote = await response.json();
+        if (!remote || typeof remote !== 'object' || Array.isArray(remote)) return;
+        if (!Object.keys(remote).length && Object.keys(getSyncedState()).length) {
+          await pushCloudState();
+          return;
+        }
+        const snapshot = stableStringify(remote);
+        if (snapshot === lastCloudSnapshot) return;
+        applyingRemote = true;
+        Object.keys(remote).filter(isSyncedKey).forEach(key => {
+          localStorage.setItem(key, JSON.stringify(remote[key]));
+        });
+        applyingRemote = false;
+        lastCloudSnapshot = snapshot;
+        Object.assign(state, defaultState, readState());
+        renderSplits();
+        renderLogs();
+        renderCharts();
+        renderPhotos();
+      } catch (_) {
+        applyingRemote = false;
+      }
+    }
+
+    function initCloudSync() {
+      lastCloudSnapshot = stableStringify(getSyncedState());
+      pullCloudState();
+      window.setInterval(pullCloudState, 5000);
+      window.addEventListener('focus', pullCloudState);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) pullCloudState();
+      });
+    }
+
+    function renderSplits() {
+      const row = document.getElementById('splitRow');
+      row.replaceChildren();
+      splits.forEach(split => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `split-btn${state.split === split ? ' is-active' : ''}`;
+        btn.textContent = split;
+        btn.addEventListener('click', () => {
+          state.split = split;
+          saveState();
+          renderSplits();
+        });
+        row.appendChild(btn);
+      });
+    }
+
+    function parseReps(text) {
+      return text.split(',').map(rep => Number(rep.trim())).filter(Number.isFinite);
+    }
+
+    function targetHit(log) {
+      return log.reps.length >= log.sets && log.reps.slice(0, log.sets).every(rep => rep >= 8);
+    }
+
+    function renderLogs() {
+      const list = document.getElementById('logList');
+      list.replaceChildren();
+      if (!state.logs.length) {
+        const empty = document.createElement('div');
+        empty.className = 'log-item';
+        empty.textContent = 'No workout entries yet.';
+        list.appendChild(empty);
+        return;
+      }
+      state.logs.slice().reverse().forEach((log, reverseIdx) => {
+        const idx = state.logs.length - 1 - reverseIdx;
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `
+          <div>
+            <div class="log-title">${log.exercise}</div>
+            <div class="log-meta">${log.split} - ${log.sets} sets - ${log.weight}kg - reps ${log.reps.join(', ')}</div>
+          </div>
+        `;
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'delete';
+        del.textContent = '×';
+        del.addEventListener('click', () => {
+          state.logs.splice(idx, 1);
+          saveState();
+          renderLogs();
+          renderCharts();
+        });
+        item.appendChild(del);
+        if (targetHit(log)) {
+          const rec = document.createElement('div');
+          rec.className = 'rec';
+          rec.textContent = 'Target hit! Increase weight increment by 2kg for progressive overload.';
+          item.appendChild(rec);
+        }
+        list.appendChild(item);
+      });
+    }
+
+    function renderCharts() {
+      const grid = document.getElementById('chartGrid');
+      grid.replaceChildren();
+      const exercises = [...new Set(state.logs.map(log => log.exercise))].slice(0, 3);
+      (exercises.length ? exercises : ['Bench Press', 'Squat', 'Deadlift']).forEach(exercise => {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<div class="chart-title">${exercise}</div><canvas width="300" height="90"></canvas>`;
+        grid.appendChild(card);
+        drawChart(card.querySelector('canvas'), state.logs.filter(log => log.exercise === exercise).map(log => Number(log.weight)));
+      });
+    }
+
+    function drawChart(canvas, values) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.beginPath();
+      ctx.moveTo(0, h - 12);
+      ctx.lineTo(w, h - 12);
+      ctx.stroke();
+      if (values.length < 2) {
+        ctx.fillStyle = 'rgba(255,255,255,0.34)';
+        ctx.font = '12px monospace';
+        ctx.fillText('Add more logs', 10, 42);
+        return;
+      }
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = Math.max(1, max - min);
+      ctx.strokeStyle = '#6be3a4';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      values.forEach((value, idx) => {
+        const x = (idx / (values.length - 1)) * (w - 18) + 9;
+        const y = h - 16 - ((value - min) / span) * (h - 28);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    document.getElementById('addLog').addEventListener('click', () => {
+      const log = {
+        exercise: document.getElementById('exercise').value,
+        split: state.split,
+        sets: Number(document.getElementById('sets').value) || 1,
+        weight: Number(document.getElementById('weight').value) || 0,
+        reps: parseReps(document.getElementById('reps').value),
+        at: Date.now()
+      };
+      state.logs.push(log);
+      saveState();
+      renderLogs();
+      renderCharts();
+    });
+
+    document.querySelectorAll('[data-photo]').forEach(input => {
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.photos[input.dataset.photo] = reader.result;
+          saveState();
+          renderPhotos();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    function renderPhotos() {
+      ['photoA', 'photoB'].forEach(id => {
+        const slot = document.getElementById(id);
+        const old = slot.querySelector('img');
+        if (old) old.remove();
+        if (state.photos[id]) {
+          const img = document.createElement('img');
+          img.src = state.photos[id];
+          img.alt = id === 'photoA' ? 'Before progress photo' : 'After progress photo';
+          slot.prepend(img);
+        }
+      });
+    }
+
+    renderSplits();
+    renderLogs();
+    renderCharts();
+    renderPhotos();
+    initCloudSync();
+  </script>
+</body>
+</html>

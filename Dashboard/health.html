@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Personal Dashboard - Health</title>
+  <style>
+    :root {
+      --bg: #050506;
+      --panel: rgba(255,255,255,0.045);
+      --panel-strong: rgba(255,255,255,0.07);
+      --text: #fafafa;
+      --muted: #b8b6b0;
+      --dim: #76746e;
+      --success: #6be3a4;
+      --warning: #f2c063;
+      --danger: #ff6b6b;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: calc(22px + env(safe-area-inset-top)) 18px 92px;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 80% 8%, rgba(224,118,88,0.15), transparent 34%),
+        radial-gradient(circle at 15% 88%, rgba(107,227,164,0.08), transparent 32%),
+        var(--bg);
+    }
+
+    main { width: min(100%, 1100px); margin: 0 auto; }
+
+    .title {
+      margin: 0 0 4px;
+      font-size: 28px;
+      font-weight: 750;
+      line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #c7c4bc 120%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      grid-column: span 6;
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.42);
+      backdrop-filter: blur(22px) saturate(1.2);
+    }
+
+    .card-wide { grid-column: span 12; }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 16px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.65;
+    }
+
+    .supp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .window {
+      min-height: 170px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .window.is-due {
+      animation: due-pulse 1.4s ease-in-out infinite;
+      border-color: rgba(255,107,107,0.35);
+    }
+
+    @keyframes due-pulse {
+      50% { box-shadow: 0 0 0 1px rgba(255,107,107,0.22), 0 0 24px rgba(255,107,107,0.10); }
+    }
+
+    .window-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .window-title {
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .window-time {
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .supp-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .supp-item input { accent-color: var(--success); }
+
+    .low-toggle {
+      margin-left: auto;
+      border: 0;
+      border-radius: 999px;
+      padding: 4px 7px;
+      color: var(--dim);
+      background: rgba(255,255,255,0.05);
+      font: 700 10px var(--mono);
+      cursor: pointer;
+    }
+
+    .low-toggle.is-low {
+      color: #120d03;
+      background: var(--warning);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 11px;
+      padding: 11px 12px;
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      font: 700 15px var(--mono);
+      outline: none;
+    }
+
+    input[type="number"]:focus { border-color: rgba(255,255,255,0.5); }
+
+    .hydration-readout {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--panel-strong);
+    }
+
+    .big-num {
+      font-size: 42px;
+      font-weight: 780;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .cup-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .primary {
+      color: #07120d;
+      border: 0;
+      background: linear-gradient(180deg, #7ff0b7, #55d592);
+    }
+
+    .bar {
+      height: 7px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .bar-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #6be3a4, #76b7ff);
+      transition: width 0.25s ease;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      z-index: 20;
+      display: flex;
+      gap: 6px;
+      width: min(calc(100% - 24px), 520px);
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 18px;
+      background: rgba(8,8,9,0.84);
+      box-shadow: 0 16px 44px rgba(0,0,0,0.48);
+      backdrop-filter: blur(22px) saturate(1.25);
+      transform: translateX(-50%);
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 13px;
+      color: var(--muted);
+      text-align: center;
+      text-decoration: none;
+      font: 800 11px/1 var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .bottom-nav a[aria-current="page"] {
+      color: #08100d;
+      background: var(--success);
+    }
+
+    @media (max-width: 760px) {
+      .card { grid-column: span 12; }
+      .supp-grid, .metric-grid { grid-template-columns: 1fr; }
+      .title { font-size: 23px; }
+      .big-num { font-size: 34px; }
+      .hydration-readout { grid-template-columns: 1fr; }
+      .bottom-nav a { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="title">Health & Hydration</h1>
+    <p class="subtitle">Supplement timing, running-low flags, and a dynamic water target that reacts to your day.</p>
+
+    <div class="grid">
+      <section class="card card-wide">
+        <div class="section-label">Supplement Windows</div>
+        <div class="supp-grid" id="suppGrid"></div>
+      </section>
+
+      <section class="card card-wide">
+        <div class="section-label">Fluid Intake Calculator</div>
+        <div class="metric-grid">
+          <label>Weight kg <input id="weight" type="number" min="20" max="250" step="0.1"></label>
+          <label>Age <input id="age" type="number" min="8" max="100"></label>
+          <label>Workout hrs <input id="activity" type="number" min="0" max="12" step="0.25"></label>
+          <label>Caffeine mg <input id="caffeine" type="number" min="0" max="1200" step="25"></label>
+        </div>
+        <div class="hydration-readout">
+          <div>
+            <div class="big-num"><span id="waterDone">0.0</span>L / <span id="waterGoal">2.7</span>L</div>
+            <div class="small" id="waterNote">Healthy zone updates as you change the inputs.</div>
+          </div>
+          <button class="primary" id="addCup" type="button">+ 300ml</button>
+        </div>
+        <div class="bar"><div class="bar-fill" id="waterFill"></div></div>
+        <div class="cup-row">
+          <button type="button" data-cup="250">+ 250ml</button>
+          <button type="button" data-cup="500">+ 500ml</button>
+          <button type="button" id="resetWater">Reset</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Dashboard sections">
+    <a href="index.html">Main</a>
+    <a href="health.html" aria-current="page">Health</a>
+    <a href="gym.html">Gym</a>
+    <a href="weight102.html">Weight</a>
+  </nav>
+
+  <script>
+    const windows = [
+      { id: 'morning', title: 'Morning', time: '07:00-10:00', hourStart: 7, hourEnd: 10, items: ['Electrolytes', 'Vitamin D', 'Creatine'] },
+      { id: 'lunch', title: 'Lunch', time: '12:00-15:00', hourStart: 12, hourEnd: 15, items: ['Omega-3', 'Magnesium', 'Protein'] },
+      { id: 'evening', title: 'Evening', time: '19:00-22:00', hourStart: 19, hourEnd: 22, items: ['Zinc', 'Sleep stack', 'Stretch reset'] }
+    ];
+
+    const defaults = { weight: 70, age: 18, activity: 1, caffeine: 150, waterMl: 0, done: {}, low: {} };
+    const state = { ...defaults, ...readState() };
+    const fields = ['weight', 'age', 'activity', 'caffeine'].map(id => document.getElementById(id));
+
+    function readState() {
+      try { return JSON.parse(localStorage.getItem('health_dashboard_v1')) || {}; }
+      catch (_) { return {}; }
+    }
+
+    function saveState() {
+      localStorage.setItem('health_dashboard_v1', JSON.stringify(state));
+      scheduleCloudPush();
+    }
+
+    const CLOUD_SYNC_ENDPOINT = '/.netlify/functions/store';
+    const SYNC_EXACT_KEYS = ['goal_streak_v1', 'health_dashboard_v1', 'gym_dashboard_v1'];
+    const SYNC_PREFIXES = ['goals:'];
+    let cloudPushTimer = null;
+    let lastCloudSnapshot = '';
+    let applyingRemote = false;
+
+    function isSyncedKey(key) {
+      return SYNC_EXACT_KEYS.includes(key) || SYNC_PREFIXES.some(prefix => key.startsWith(prefix));
+    }
+
+    function readJsonKey(key) {
+      try { return JSON.parse(localStorage.getItem(key)); }
+      catch (_) { return null; }
+    }
+
+    function getSyncedState() {
+      const synced = {};
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key && isSyncedKey(key)) synced[key] = readJsonKey(key);
+      }
+      return synced;
+    }
+
+    function stableStringify(value) {
+      const sorted = {};
+      Object.keys(value || {}).sort().forEach(key => { sorted[key] = value[key]; });
+      return JSON.stringify(sorted);
+    }
+
+    function scheduleCloudPush() {
+      if (applyingRemote) return;
+      window.clearTimeout(cloudPushTimer);
+      cloudPushTimer = window.setTimeout(pushCloudState, 300);
+    }
+
+    async function pushCloudState() {
+      const stateToPush = getSyncedState();
+      const snapshot = stableStringify(stateToPush);
+      if (snapshot === lastCloudSnapshot) return;
+      try {
+        const response = await fetch(CLOUD_SYNC_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stateToPush)
+        });
+        if (response.ok) lastCloudSnapshot = snapshot;
+      } catch (_) {}
+    }
+
+    async function pullCloudState() {
+      try {
+        const response = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
+        if (!response.ok) return;
+        const remote = await response.json();
+        if (!remote || typeof remote !== 'object' || Array.isArray(remote)) return;
+        if (!Object.keys(remote).length && Object.keys(getSyncedState()).length) {
+          await pushCloudState();
+          return;
+        }
+        const snapshot = stableStringify(remote);
+        if (snapshot === lastCloudSnapshot) return;
+        applyingRemote = true;
+        Object.keys(remote).filter(isSyncedKey).forEach(key => {
+          localStorage.setItem(key, JSON.stringify(remote[key]));
+        });
+        applyingRemote = false;
+        lastCloudSnapshot = snapshot;
+        Object.assign(state, defaults, readState());
+        renderSupplements();
+        renderWater();
+      } catch (_) {
+        applyingRemote = false;
+      }
+    }
+
+    function initCloudSync() {
+      lastCloudSnapshot = stableStringify(getSyncedState());
+      pullCloudState();
+      window.setInterval(pullCloudState, 5000);
+      window.addEventListener('focus', pullCloudState);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) pullCloudState();
+      });
+    }
+
+    function todayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function itemKey(windowId, item) {
+      return `${todayKey()}:${windowId}:${item}`;
+    }
+
+    function isActiveWindow(win) {
+      const hour = new Date().getHours();
+      return hour >= win.hourStart && hour < win.hourEnd;
+    }
+
+    function renderSupplements() {
+      const grid = document.getElementById('suppGrid');
+      grid.replaceChildren();
+      windows.forEach(win => {
+        const card = document.createElement('section');
+        card.className = 'window';
+        const hasMissed = isActiveWindow(win) && win.items.some(item => !state.done[itemKey(win.id, item)]);
+        card.classList.toggle('is-due', hasMissed);
+        card.innerHTML = `<div class="window-head"><div class="window-title">${win.title}</div><div class="window-time">${win.time}</div></div>`;
+        win.items.forEach(item => {
+          const key = itemKey(win.id, item);
+          const row = document.createElement('label');
+          row.className = 'supp-item';
+          row.innerHTML = `<input type="checkbox" ${state.done[key] ? 'checked' : ''}> <span>${item}</span>`;
+          const low = document.createElement('button');
+          low.type = 'button';
+          low.className = `low-toggle${state.low[item] ? ' is-low' : ''}`;
+          low.textContent = state.low[item] ? 'LOW' : 'OK';
+          row.querySelector('input').addEventListener('change', event => {
+            state.done[key] = event.target.checked;
+            saveState();
+            renderSupplements();
+          });
+          low.addEventListener('click', event => {
+            event.preventDefault();
+            state.low[item] = !state.low[item];
+            saveState();
+            renderSupplements();
+          });
+          row.appendChild(low);
+          card.appendChild(row);
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    function waterGoalMl() {
+      const weightBase = Number(state.weight || defaults.weight) * 35;
+      const activityBoost = Number(state.activity || 0) * 650;
+      const caffeineBoost = Math.max(0, Number(state.caffeine || 0) / 100) * 120;
+      const ageAdjustment = Number(state.age || defaults.age) > 45 ? 150 : 0;
+      return Math.round(weightBase + activityBoost + caffeineBoost + ageAdjustment);
+    }
+
+    function renderWater() {
+      fields.forEach(field => { field.value = state[field.id]; });
+      const goal = waterGoalMl();
+      const done = Number(state.waterMl || 0);
+      document.getElementById('waterGoal').textContent = (goal / 1000).toFixed(1);
+      document.getElementById('waterDone').textContent = (done / 1000).toFixed(1);
+      document.getElementById('waterFill').style.width = `${Math.min(100, (done / goal) * 100)}%`;
+      document.getElementById('waterNote').textContent = done >= goal
+        ? 'Target reached. Keep sipping lightly.'
+        : `${Math.max(0, Math.ceil((goal - done) / 300))} cups to reach the healthy zone.`;
+    }
+
+    fields.forEach(field => {
+      field.value = state[field.id];
+      field.addEventListener('input', () => {
+        state[field.id] = Number(field.value);
+        saveState();
+        renderWater();
+      });
+    });
+
+    document.getElementById('addCup').addEventListener('click', () => {
+      state.waterMl = Number(state.waterMl || 0) + 300;
+      saveState();
+      renderWater();
+    });
+
+    document.querySelectorAll('[data-cup]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.waterMl = Number(state.waterMl || 0) + Number(btn.dataset.cup);
+        saveState();
+        renderWater();
+      });
+    });
+
+    document.getElementById('resetWater').addEventListener('click', () => {
+      state.waterMl = 0;
+      saveState();
+      renderWater();
+    });
+
+    renderSupplements();
+    renderWater();
+    initCloudSync();
+    window.setInterval(renderSupplements, 60 * 1000);
+  </script>
+</body>
+</html>
